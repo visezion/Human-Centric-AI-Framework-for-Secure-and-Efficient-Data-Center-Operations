@@ -1,6 +1,7 @@
 name: Build AI Service
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
     paths:

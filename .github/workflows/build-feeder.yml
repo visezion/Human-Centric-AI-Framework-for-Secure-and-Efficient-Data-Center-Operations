@@ -1,6 +1,7 @@
 name: Build Telemetry Feeder
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
     paths:
