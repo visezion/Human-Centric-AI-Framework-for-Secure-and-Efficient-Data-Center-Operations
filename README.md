@@ -1,6 +1,6 @@
 # Human-Centric AI Framework for Secure and Efficient Data Center Operations
 
-A PhD-ready yet lightweight reference stack that demonstrates end-to-end telemetry ingestion, explainable AI analytics, and a human-centric dashboard for secure and efficient data center operations. By Victor Ayodeji Oluwasusi
+A PhD-ready yet lightweight reference stack that demonstrates end-to-end telemetry ingestion, explainable AI analytics, and a human-centric dashboard for secure and efficient data center operations. By Victor Ayodeji Oluwasusi.
 
 ## Stack Overview
 
