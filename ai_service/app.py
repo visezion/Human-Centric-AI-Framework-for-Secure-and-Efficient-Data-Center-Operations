@@ -274,7 +274,7 @@ def predict() -> tuple:
 
     response = {
         "timestamp": datetime.utcnow().isoformat(),
-        "model": os.getenv("MODEL_NAME", "sentry-lite-vae"),
+        "model": os.getenv("MODEL_NAME", "sentry-lite-vae-v2"),
         "features": {feature: float(feature_vector[0][idx]) for idx, feature in enumerate(FEATURE_ORDER)},
         "anomaly_score": model_result["anomaly_score"],
         "is_anomaly": model_result["is_anomaly"],

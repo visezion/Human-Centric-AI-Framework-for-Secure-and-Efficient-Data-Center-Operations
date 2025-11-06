@@ -82,6 +82,8 @@ services:
     image: ghcr.io/visezion/hcai-feeder:latest
     container_name: telemetry-feeder
     restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
     environment:
       MQTT_BROKER_HOST: mqtt.vicezion.com
       MQTT_TOPIC_PREFIX: sensors
@@ -99,7 +101,7 @@ services:
       - "5001:5000"
     labels:
       com.centurylinklabs.watchtower.enable: "true"
-      
+
     environment:
       MLFLOW_S3_IGNORE_TLS: "true"
     command: >-
@@ -127,6 +129,17 @@ services:
     depends_on:
       - ai_service
       - influxdb
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    user: root
+    ports:
+      - "9091:9090"
+    volumes:
+      - /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
 
 volumes:
   influxdb-data:
