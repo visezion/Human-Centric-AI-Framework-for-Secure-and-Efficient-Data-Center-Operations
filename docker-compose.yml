@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   mosquitto:
     image: eclipse-mosquitto:2.0.20
@@ -59,8 +61,7 @@ services:
       - influxdb
 
   ai_service:
-    build:
-      context: /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/ai_service
+    image: ghcr.io/visezion/hcai-ai:latest
     container_name: ai-service
     restart: unless-stopped
     ports:
@@ -75,8 +76,7 @@ services:
       - mlflow
 
   telemetry_feeder:
-    build:
-      context: /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/telemetry_feeder
+    image: ghcr.io/visezion/hcai-feeder:latest
     container_name: telemetry-feeder
     restart: unless-stopped
     environment:
@@ -104,8 +104,7 @@ services:
       - mlflow-data:/mlflow
 
   chatops:
-    build:
-      context: /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/chatops_service
+    image: ghcr.io/visezion/hcai-chatops:latest
     container_name: chatops
     restart: unless-stopped
     ports:

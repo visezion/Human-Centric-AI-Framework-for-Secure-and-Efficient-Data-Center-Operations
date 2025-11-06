@@ -1,0 +1,21 @@
+name: Build ChatOps Service
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "chatops_service/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u visezion --password-stdin
+
+      - name: Build and push
+        run: |
+          docker build -t ghcr.io/visezion/hcai-chatops:latest ./chatops_service
+          docker push ghcr.io/visezion/hcai-chatops:latest

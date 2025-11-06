@@ -1,0 +1,21 @@
+name: Build Telemetry Feeder
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "telemetry_feeder/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u visezion --password-stdin
+
+      - name: Build and push
+        run: |
+          docker build -t ghcr.io/visezion/hcai-feeder:latest ./telemetry_feeder
+          docker push ghcr.io/visezion/hcai-feeder:latest
