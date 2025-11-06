@@ -1,0 +1,86 @@
+{
+  "id": null,
+  "uid": "human-centric-stack",
+  "title": "Human-Centric Data Center Overview",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU Utilization",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-v2"},
+      "targets": [
+        {
+          "query": "from(bucket: \"telemetry\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"cpu\" and r._field == \"usage_system\") |> aggregateWindow(every: 1m, fn: mean) |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Utilization",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-v2"},
+      "targets": [
+        {
+          "query": "from(bucket: \"telemetry\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"mem\" and r._field == \"used_percent\") |> aggregateWindow(every: 1m, fn: mean) |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cooling / Power Snapshot",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 8},
+      "datasource": {"type": "influxdb", "uid": "influxdb-v2"},
+      "targets": [
+        {
+          "query": "from(bucket: \"telemetry\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"system\" and r._field == \"load1\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}
+      }
+    },
+    {
+      "type": "text",
+      "title": "AI Insight",
+      "gridPos": {"h": 6, "w": 16, "x": 8, "y": 8},
+      "options": {
+        "content": "JSON panel below pulls ChatOps explanations directly from the AI service. Use it as a template for embedding SHAP/LIME narratives next to classic telemetry.",
+        "mode": "markdown"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Rack Anomaly Score",
+      "gridPos": {"h": 7, "w": 24, "x": 0, "y": 14},
+      "datasource": {"type": "influxdb", "uid": "influxdb-v2"},
+      "targets": [
+        {
+          "query": "from(bucket: \\\"telemetry\\\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \\\"rack_telemetry\\\" and r._field == \\\"anomaly_score\\\") |> aggregateWindow(every: 30s, fn: mean) |> yield(name: \\\"mean\\\")",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "ChatOps Explanations",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 21},
+      "datasource": {"type": "simpod-json-datasource", "uid": "chatops-json"},
+      "targets": [
+        {"refId": "A", "target": "rack-12A", "payload": {"mode": "table"}},
+        {"refId": "B", "target": "rack-07B", "payload": {"mode": "table"}},
+        {"refId": "C", "target": "rack-03C", "payload": {"mode": "table"}}
+      ]
+    }
+  ]
+}

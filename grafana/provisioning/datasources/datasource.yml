@@ -1,0 +1,24 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: InfluxDBv2
+    uid: influxdb-v2
+
+datasources:
+  - name: InfluxDBv2
+    type: influxdb
+    uid: influxdb-v2
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: human-centric
+      defaultBucket: telemetry
+      tlsSkipVerify: true
+    secureJsonData:
+      token: ${INFLUXDB_ADMIN_TOKEN}
+  - name: ChatOps JSON
+    type: simpod-json-datasource
+    uid: chatops-json
+    access: proxy
+    url: http://chatops:8500

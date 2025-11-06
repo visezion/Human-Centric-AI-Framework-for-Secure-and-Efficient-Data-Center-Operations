@@ -1,0 +1,124 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: human_admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: changeme123
+      DOCKER_INFLUXDB_INIT_ORG: human-centric
+      DOCKER_INFLUXDB_INIT_BUCKET: telemetry
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: supersecret-supertoken
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+
+  telegraf:
+    image: telegraf:1.30
+    container_name: telegraf
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+      - mosquitto
+    environment:
+      INFLUX_TOKEN: supersecret-supertoken
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    links:
+      - influxdb
+
+  grafana:
+    image: grafana/grafana:10.4.3
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      INFLUXDB_ADMIN_TOKEN: supersecret-supertoken
+      GF_INSTALL_PLUGINS: simpod-json-datasource
+      AI_API_URL: http://ai_service:8000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - influxdb
+
+  ai_service:
+    build: ./ai_service
+    container_name: ai-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      FLASK_ENV: production
+      MODEL_NAME: sentry-lite-vae
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: human-centric-ai
+      ENABLE_VAE: "true"
+    depends_on:
+      - mlflow
+
+  telemetry_feeder:
+    build: ./telemetry_feeder
+    container_name: telemetry-feeder
+    restart: unless-stopped
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_TOPIC_PREFIX: sensors
+      AI_SERVICE_URL: http://ai_service:8000/predict
+      PUBLISH_INTERVAL_SECONDS: "5"
+    depends_on:
+      - mosquitto
+      - ai_service
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.0
+    container_name: mlflow
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      MLFLOW_S3_IGNORE_TLS: "true"
+    command: >-
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    volumes:
+      - mlflow-data:/mlflow
+
+  chatops:
+    build: ./chatops_service
+    container_name: chatops
+    restart: unless-stopped
+    ports:
+      - "8500:8500"
+    environment:
+      AI_SERVICE_URL: http://ai_service:8000/predict
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_ORG: human-centric
+      INFLUX_BUCKET: telemetry
+      INFLUX_TOKEN: supersecret-supertoken
+    depends_on:
+      - ai_service
+      - influxdb
+
+volumes:
+  influxdb-data:
+  influxdb-config:
+  grafana-data:
+  mlflow-data:
