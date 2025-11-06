@@ -66,6 +66,9 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
     environment:
       FLASK_ENV: production
       MODEL_NAME: sentry-lite-vae
@@ -94,6 +97,9 @@ services:
     restart: unless-stopped
     ports:
       - "5001:5000"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      
     environment:
       MLFLOW_S3_IGNORE_TLS: "true"
     command: >-
@@ -109,6 +115,9 @@ services:
     restart: unless-stopped
     ports:
       - "8500:8500"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
     environment:
       AI_SERVICE_URL: https://ai.vicezion.com/predict
       INFLUX_URL: https://influx.vicezion.com

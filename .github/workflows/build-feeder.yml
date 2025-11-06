@@ -19,7 +19,15 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u visezion --password-stdin
 
+     
       - name: Build and push
         run: |
-          docker build -t ghcr.io/visezion/hcai-feeder:latest ./telemetry_feeder
-          docker push ghcr.io/visezion/hcai-feeder:latest
+            VERSION=$(date +%Y%m%d)-${GITHUB_SHA::7}
+            IMAGE=ghcr.io/visezion/hcai-feeder
+
+            docker build -t $IMAGE:latest ./telemetry_feeder
+            docker tag $IMAGE:latest $IMAGE:$VERSION
+
+            docker push $IMAGE:latest
+            docker push $IMAGE:$VERSION
+

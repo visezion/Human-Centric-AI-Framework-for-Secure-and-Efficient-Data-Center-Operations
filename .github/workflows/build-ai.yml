@@ -21,5 +21,11 @@ jobs:
 
       - name: Build and push
         run: |
-          docker build -t ghcr.io/visezion/hcai-ai:latest ./ai_service
-          docker push ghcr.io/visezion/hcai-ai:latest
+            VERSION=$(date +%Y%m%d)-${GITHUB_SHA::7}
+            IMAGE=ghcr.io/visezion/hcai-ai
+
+            docker build -t $IMAGE:latest ./ai_service
+            docker tag $IMAGE:latest $IMAGE:$VERSION
+
+            docker push $IMAGE:latest
+            docker push $IMAGE:$VERSION
