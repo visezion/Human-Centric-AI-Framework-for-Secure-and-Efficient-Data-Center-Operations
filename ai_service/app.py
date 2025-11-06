@@ -270,8 +270,7 @@ def predict() -> tuple:
 
     model_result = anomaly_scorer.score(feature_vector)
     shap_summary = _shap_explain(feature_vector)
-    lime_summary = []
-
+    lime_summary = _lime_explain(feature_vector)
 
     response = {
         "timestamp": datetime.utcnow().isoformat(),
