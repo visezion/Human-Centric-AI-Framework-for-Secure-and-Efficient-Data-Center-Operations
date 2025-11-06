@@ -8,8 +8,8 @@ import httpx
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
-AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://ai_service:8000/predict")
-INFLUX_URL = os.getenv("INFLUX_URL", "http://influxdb:8086")
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "https://ai.vicezion.com/predict")
+INFLUX_URL = os.getenv("INFLUX_URL", "https://influx.vicezion.com")
 INFLUX_ORG = os.getenv("INFLUX_ORG", "human-centric")
 INFLUX_BUCKET = os.getenv("INFLUX_BUCKET", "telemetry")
 INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")

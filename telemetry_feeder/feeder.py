@@ -14,11 +14,11 @@ RACK_IDS: List[str] = ["rack-12A", "rack-07B", "rack-03C"]
 ROOMS = {"rack-12A": "pod-alpha", "rack-07B": "pod-beta", "rack-03C": "pod-gamma"}
 SENSOR_TYPES = ["wazuh", "snmp", "zeek"]
 
-MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "mqtt.vicezion.com")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
 MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "sensors")
 PUBLISH_INTERVAL = float(os.getenv("PUBLISH_INTERVAL_SECONDS", "5"))
-AI_SERVICE_URL = os.getenv("AI_SERVICE_URL")
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "https://ai.vicezion.com/predict")
 
 rng = np.random.default_rng(123)
 

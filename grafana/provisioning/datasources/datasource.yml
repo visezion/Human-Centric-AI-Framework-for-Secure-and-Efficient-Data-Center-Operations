@@ -9,7 +9,7 @@ datasources:
     type: influxdb
     uid: influxdb-v2
     access: proxy
-    url: http://influxdb:8086
+    url: https://influx.vicezion.com
     jsonData:
       version: Flux
       organization: human-centric
@@ -21,4 +21,4 @@ datasources:
     type: simpod-json-datasource
     uid: chatops-json
     access: proxy
-    url: http://chatops:8500
+    url: https://chatops.vicezion.com

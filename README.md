@@ -43,11 +43,11 @@ The minimal `docker-compose.yml` brings up Telegraf, InfluxDB, Grafana, the AI m
    docker compose up -d --build
    ```
 3. **Access the services:**
-   - InfluxDB UI: http://localhost:8086 (user `human_admin`, password `changeme123`)
-   - Grafana: http://localhost:3000 (user `admin`, password `admin123`)
-   - AI API: http://localhost:8000/health and `/predict`
-   - MLflow UI: http://localhost:5001
-   - ChatOps API / JSON datasource: http://localhost:8500
+   - InfluxDB UI: https://influx.vicezion.com (user `human_admin`, password `changeme123`)
+   - Grafana: https://grafana.vicezion.com (user `admin`, password `admin123`)
+   - AI API: https://ai.vicezion.com/health and `/predict`
+   - MLflow UI: https://mlflow.vicezion.com
+   - ChatOps API / JSON datasource: https://chatops.vicezion.com
 
 Telegraf immediately streams host metrics into InfluxDB, which in turn populate the provided Grafana dashboard (`Human-Centric AI`).
 
@@ -63,7 +63,7 @@ The `ai_service` container bootstraps a synthetic dataset, trains a **Variationa
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:8000/predict \
+curl -X POST https://ai.vicezion.com/predict \
   -H "Content-Type: application/json" \
   -d '{
         "cpu_util": 78,
@@ -104,7 +104,7 @@ Swap the simulator with a real Wazuh/Zeek/MQTT publisher by pointing those agent
 - Ask the ChatOps API directly:
 
 ```bash
-curl -X POST http://localhost:8500/question \
+curl -X POST https://chatops.vicezion.com/question \
   -H "Content-Type: application/json" \
   -d '{"question":"Why did rack 12A alert?"}'
 ```

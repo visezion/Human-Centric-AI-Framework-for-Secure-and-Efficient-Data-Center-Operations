@@ -50,7 +50,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin123
       INFLUXDB_ADMIN_TOKEN: supersecret-supertoken
       GF_INSTALL_PLUGINS: simpod-json-datasource
-      AI_API_URL: http://ai_service:8000
+      AI_API_URL: https://ai.vicezion.com
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -67,7 +67,7 @@ services:
     environment:
       FLASK_ENV: production
       MODEL_NAME: sentry-lite-vae
-      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_TRACKING_URI: https://mlflow.vicezion.com
       MLFLOW_EXPERIMENT_NAME: human-centric-ai
       ENABLE_VAE: "true"
     depends_on:
@@ -78,9 +78,9 @@ services:
     container_name: telemetry-feeder
     restart: unless-stopped
     environment:
-      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_HOST: mqtt.vicezion.com
       MQTT_TOPIC_PREFIX: sensors
-      AI_SERVICE_URL: http://ai_service:8000/predict
+      AI_SERVICE_URL: https://ai.vicezion.com/predict
       PUBLISH_INTERVAL_SECONDS: "5"
     depends_on:
       - mosquitto
@@ -108,8 +108,8 @@ services:
     ports:
       - "8500:8500"
     environment:
-      AI_SERVICE_URL: http://ai_service:8000/predict
-      INFLUX_URL: http://influxdb:8086
+      AI_SERVICE_URL: https://ai.vicezion.com/predict
+      INFLUX_URL: https://influx.vicezion.com
       INFLUX_ORG: human-centric
       INFLUX_BUCKET: telemetry
       INFLUX_TOKEN: supersecret-supertoken
