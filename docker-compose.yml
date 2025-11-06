@@ -58,21 +58,21 @@ services:
     depends_on:
       - influxdb
 
-    ai_service:
-      build:
-        context: /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/ai_service
-      container_name: ai-service
-      restart: unless-stopped
-      ports:
-        - "8000:8000"
-      environment:
-        FLASK_ENV: production
-        MODEL_NAME: sentry-lite-vae
-        MLFLOW_TRACKING_URI: https://mlflow.vicezion.com
-        MLFLOW_EXPERIMENT_NAME: human-centric-ai
-        ENABLE_VAE: "true"
-      depends_on:
-        - mlflow
+  ai_service:
+    build:
+      context: /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/ai_service
+    container_name: ai-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      FLASK_ENV: production
+      MODEL_NAME: sentry-lite-vae
+      MLFLOW_TRACKING_URI: https://mlflow.vicezion.com
+      MLFLOW_EXPERIMENT_NAME: human-centric-ai
+      ENABLE_VAE: "true"
+    depends_on:
+      - mlflow
 
   telemetry_feeder:
     build:
