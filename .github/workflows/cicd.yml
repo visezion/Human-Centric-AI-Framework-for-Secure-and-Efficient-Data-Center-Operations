@@ -1,0 +1,39 @@
+name: CI CD to Portainer
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: USERNAME/APP_IMAGE_NAME
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        env:
+          PORTAINER_TOKEN: ${{ secrets.PORTAINER_TOKEN }}
+        run: echo "${PORTAINER_TOKEN}" | docker login ghcr.io -u USERNAME --password-stdin
+
+      - name: Build and push image
+        run: |
+          docker build -t $REGISTRY/$IMAGE_NAME:latest .
+          docker push $REGISTRY/$IMAGE_NAME:latest
+
+      - name: Update Portainer stack
+        env:
+          PORTAINER_TOKEN: ${{ secrets.PORTAINER_TOKEN }}
+        run: |
+          STACK_ID="4"
+          ENDPOINT_ID="3"
+          COMPOSE=$(base64 -w 0 docker-compose.yml)
+          curl -s -X PUT "https://docker.vicezion.com/api/stacks/${STACK_ID}?endpointId=${ENDPOINT_ID}" \
+            -H "X-API-Key: ${PORTAINER_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"StackFileContent\":\"$(echo ${COMPOSE} | base64 -d)\",\"Prune\":true}"
