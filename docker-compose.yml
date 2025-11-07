@@ -65,7 +65,7 @@ services:
     container_name: ai-service
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8010:8000"
     labels:
       com.centurylinklabs.watchtower.enable: "true"
 

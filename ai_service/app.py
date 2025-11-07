@@ -18,6 +18,8 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 from waitress import serve
 
+# test auto sync v1
+
 app = Flask(__name__)
 
 FEATURE_ORDER = [
