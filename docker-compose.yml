@@ -8,7 +8,8 @@ services:
     ports:
       - "1883:1883"
     volumes:
-      - /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/passwordfile:/mosquitto/config/passwordfile:ro
 
   influxdb:
     image: influxdb:2.7
@@ -36,8 +37,10 @@ services:
       - mosquitto
     environment:
       INFLUX_TOKEN: supersecret-supertoken
+      MQTT_USERNAME: hcai_operator
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD env var}
     volumes:
-      - /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     links:
       - influxdb
 
@@ -55,8 +58,8 @@ services:
       AI_API_URL: https://ai.vicezion.com
     volumes:
       - grafana-data:/var/lib/grafana
-      - /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/grafana/provisioning:/etc/grafana/provisioning:ro
-      - /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - influxdb
 
@@ -75,6 +78,9 @@ services:
       MLFLOW_TRACKING_URI: https://mlflow.vicezion.com
       MLFLOW_EXPERIMENT_NAME: human-centric-ai
       ENABLE_VAE: "true"
+      MODEL_ARTIFACT_PATH: /app/models/isolation_forest_green.joblib
+    volumes:
+      - ./ai_service/models:/app/models:ro
     depends_on:
       - mlflow
 
@@ -86,6 +92,8 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
     environment:
       MQTT_BROKER_HOST: mqtt.vicezion.com
+      MQTT_USERNAME: hcai_operator
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD env var}
       MQTT_TOPIC_PREFIX: sensors
       AI_SERVICE_URL: https://ai.vicezion.com/predict
       PUBLISH_INTERVAL_SECONDS: "5"
@@ -138,7 +146,7 @@ services:
     ports:
       - "9091:9090"
     volumes:
-      - /opt/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
 
 volumes:

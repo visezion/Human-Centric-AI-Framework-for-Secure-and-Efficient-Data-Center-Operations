@@ -1,0 +1,4 @@
+source_dataset,timestamp,sensor_type,rack_id,room,fan_rpm,power_kw,temp_c,memory_util,cpu_util
+google_cluster_v2,2024-07-08T19:20:00+00:00,google-cluster,machine-12,cluster-alpha,7600.0,0.32,29.0,61.0,45.0
+google_cluster_v2,2024-07-08T19:21:00+00:00,google-cluster,machine-17,cluster-beta,7600.0,0.41000000000000003,29.0,48.0,72.0
+google_cluster_v2,2024-07-08T19:22:00+00:00,google-cluster,machine-5,cluster-gamma,7600.0,0.15,29.0,37.0,23.0

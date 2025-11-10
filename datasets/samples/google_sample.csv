@@ -1,0 +1,4 @@
+end_time,machine_id,platform_id,cpu_usage,canonical_mem_usage,disk_io_time
+1720466400000000,12,alpha,0.45,0.61,320
+1720466460000000,17,beta,0.72,0.48,410
+1720466520000000,5,gamma,0.23,0.37,150

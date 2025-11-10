@@ -1,0 +1,4 @@
+timestamp,machine_id,machine_room_id,cpu_util,mem_util,disk_io_percent,net_io_percent,temperature_c
+1720466400,101,zone-01,0.53,0.44,12,24,29.5
+1720466460,205,zone-02,0.78,0.71,30,52,32.1
+1720466520,309,zone-03,0.15,0.27,5,12,26.3

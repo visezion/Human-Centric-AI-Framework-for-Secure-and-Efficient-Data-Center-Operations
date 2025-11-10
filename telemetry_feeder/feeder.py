@@ -17,6 +17,8 @@ SENSOR_TYPES = ["wazuh", "snmp", "zeek"]
 MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "mqtt.vicezion.com")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
 MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "sensors")
+MQTT_USERNAME = os.getenv("MQTT_USERNAME")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 PUBLISH_INTERVAL = float(os.getenv("PUBLISH_INTERVAL_SECONDS", "5"))
 AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "https://ai.vicezion.com/predict")
 
@@ -46,6 +48,8 @@ def _simulate_payload(rack_id: str) -> Dict[str, float]:
 @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
 def _build_client() -> mqtt.Client:
     client = mqtt.Client(client_id="human-centric-feeder", clean_session=True, userdata=None, protocol=mqtt.MQTTv311)
+    if MQTT_USERNAME and MQTT_PASSWORD:
+        client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
     client.connect(MQTT_BROKER_HOST, MQTT_BROKER_PORT, keepalive=60)
     return client
 

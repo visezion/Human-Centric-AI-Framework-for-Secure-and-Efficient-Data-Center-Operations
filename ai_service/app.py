@@ -1,8 +1,10 @@
 import os
 import socket
 from datetime import datetime
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Optional
 
+import joblib
 import mlflow
 import numpy as np
 import pandas as pd
@@ -85,6 +87,26 @@ class IsolationForestScorer:
         return {
             "anomaly_score": score,
             "is_anomaly": label == -1,
+        }
+
+
+class PretrainedIsolationForestScorer(IsolationForestScorer):
+    def __init__(self, artifact: Dict[str, object]) -> None:
+        self.scaler = artifact["scaler"]
+        self.model = artifact["model"]
+        self.training_matrix = np.array(artifact.get("training_matrix"), dtype=np.float32)
+        self.feature_order = artifact.get("feature_order", FEATURE_ORDER)
+        self._metadata = artifact.get("metadata", {})
+
+    def predict_values(self, raw_matrix: np.ndarray) -> np.ndarray:
+        scaled = self.scaler.transform(raw_matrix)
+        return -self.model.decision_function(scaled)
+
+    def metadata(self) -> Dict[str, float]:
+        return {
+            **super().metadata(),
+            **self._metadata,
+            "model_backend": self._metadata.get("model_backend", "isolation_forest_artifact"),
         }
 
     def predict_values(self, raw_matrix: np.ndarray) -> np.ndarray:
@@ -193,11 +215,27 @@ class VAEAnomalyScorer:
         }
 
 
+MODEL_ARTIFACT_PATH = os.getenv("MODEL_ARTIFACT_PATH")
 USE_VAE = os.getenv("ENABLE_VAE", "false").lower() in {"1", "true", "yes"}
-if USE_VAE:
-    anomaly_scorer = VAEAnomalyScorer()
-else:
-    anomaly_scorer = IsolationForestScorer()
+anomaly_scorer: Optional[IsolationForestScorer] = None
+
+if MODEL_ARTIFACT_PATH:
+    artifact_file = Path(MODEL_ARTIFACT_PATH)
+    if artifact_file.exists():
+        try:
+            artifact_payload = joblib.load(artifact_file)
+            anomaly_scorer = PretrainedIsolationForestScorer(artifact_payload)
+            app.logger.info("Loaded pretrained model artifact from %s", MODEL_ARTIFACT_PATH)
+        except Exception as exc:  # pragma: no cover
+            app.logger.warning("Failed to load model artifact %s: %s", MODEL_ARTIFACT_PATH, exc)
+    else:
+        app.logger.warning("MODEL_ARTIFACT_PATH (%s) not found, falling back to internal training.", MODEL_ARTIFACT_PATH)
+
+if anomaly_scorer is None:
+    if USE_VAE:
+        anomaly_scorer = VAEAnomalyScorer()
+    else:
+        anomaly_scorer = IsolationForestScorer()
 
 
 def _model_predict(raw_matrix: np.ndarray) -> np.ndarray:

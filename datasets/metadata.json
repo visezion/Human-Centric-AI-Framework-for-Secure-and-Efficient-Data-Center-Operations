@@ -1,0 +1,62 @@
+{
+  "google_cluster_v2": {
+    "description": "Google Borg cluster trace with task-level CPU and memory usage plus machine identifiers.",
+    "source_url": "https://github.com/google/cluster-data",
+    "column_mapping": {
+      "timestamp": {"column": "end_time", "unit": "microseconds"},
+      "rack_id": {"column": "machine_id", "prefix": "machine-"},
+      "room": {"column": "platform_id", "prefix": "cluster-", "default": "cluster-a"},
+      "sensor_type": {"value": "google-cluster"},
+      "cpu_util": {"column": "cpu_usage", "scale": 100.0},
+      "memory_util": {"column": "canonical_mem_usage", "scale": 100.0},
+      "power_kw": {"column": "disk_io_time", "scale": 0.001, "default": 2.8},
+      "fan_rpm": {"default": 7600.0},
+      "temp_c": {"default": 29.0}
+    }
+  },
+  "alibaba_cluster_2018": {
+    "description": "Alibaba production datacenter telemetry with container/job utilization stats.",
+    "source_url": "https://github.com/alibaba/clusterdata",
+    "column_mapping": {
+      "timestamp": {"column": "timestamp", "unit": "seconds"},
+      "rack_id": {"column": "machine_id", "prefix": "ali-node-"},
+      "room": {"column": "machine_room_id", "prefix": "room-"},
+      "sensor_type": {"value": "alibaba-cluster"},
+      "cpu_util": {"column": "cpu_util", "scale": 100.0},
+      "memory_util": {"column": "mem_util", "scale": 100.0},
+      "power_kw": {"column": "disk_io_percent", "scale": 0.05, "default": 3.0},
+      "fan_rpm": {"column": "net_io_percent", "scale": 50.0, "default": 7800.0},
+      "temp_c": {"column": "temperature_c", "default": 28.0}
+    }
+  },
+  "azure_2020_traces": {
+    "description": "Azure public cloud traces covering VM/container resource usage snapshots.",
+    "source_url": "https://github.com/Azure/AzurePublicDataset",
+    "column_mapping": {
+      "timestamp": {"column": "timestamp", "unit": "milliseconds"},
+      "rack_id": {"column": "node_id", "prefix": "azure-node-"},
+      "room": {"column": "cluster", "prefix": "cluster-"},
+      "sensor_type": {"value": "azure-trace"},
+      "cpu_util": {"column": "cpu_usage", "scale": 100.0},
+      "memory_util": {"column": "memory_usage", "scale": 100.0},
+      "power_kw": {"column": "power_watts", "scale": 0.001, "default": 2.5},
+      "fan_rpm": {"column": "fan_rpm", "default": 7500.0},
+      "temp_c": {"column": "temperature_c", "default": 30.0}
+    }
+  },
+  "green_dc_uci": {
+    "description": "UCI Green Data Center dataset with environmental telemetry (temperature, humidity, light).",
+    "source_url": "https://archive.ics.uci.edu/dataset/321/occupancy+estimation",
+    "column_mapping": {
+      "timestamp": {"column": "date", "unit": "iso"},
+      "rack_id": {"value": "green-lab-01"},
+      "room": {"value": "zone-a"},
+      "sensor_type": {"value": "green-dc"},
+      "cpu_util": {"column": "CO2", "scale": 0.05, "default": 45.0},
+      "memory_util": {"column": "Humidity", "default": 50.0},
+      "power_kw": {"column": "Light", "scale": 0.001, "default": 2.4},
+      "temp_c": {"column": "Temperature", "default": 27.0},
+      "fan_rpm": {"column": "HumidityRatio", "scale": 20000.0, "default": 7600.0}
+    }
+  }
+}

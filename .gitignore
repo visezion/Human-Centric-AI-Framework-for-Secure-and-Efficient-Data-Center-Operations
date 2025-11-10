@@ -1,0 +1,13 @@
+# Generated secrets/artifacts
+mosquitto/passwordfile
+ai_service/models/*.joblib
+!ai_service/models/README.md
+
+# Dataset outputs and archives
+datasets/raw/
+datasets/processed/*.csv
+!datasets/processed/google_sample.csv
+
+# Python cache
+__pycache__/
+*.pyc

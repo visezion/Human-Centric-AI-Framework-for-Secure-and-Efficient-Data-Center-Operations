@@ -51,6 +51,43 @@ The minimal `docker-compose.yml` brings up Telegraf, InfluxDB, Grafana, the AI m
 
 Telegraf immediately streams host metrics into InfluxDB, which in turn populate the provided Grafana dashboard (`Human-Centric AI`).
 
+### Public Reference Datasets
+
+Accelerate experimentation by grounding simulations on open telemetry traces:
+
+| Dataset | Description | Link |
+| --- | --- | --- |
+| Google Cluster Data v2 | Long-running trace of Google Borg jobs, machines, and scheduling decisions. | https://github.com/google/cluster-data |
+| Alibaba Cluster Trace 2018 | Production-scale resource usage + workload metadata from Alibaba’s datacenters. | https://github.com/alibaba/clusterdata |
+| Azure 2020 Traces (Microsoft) | VM, container, and job statistics from Azure’s 2020 public dataset program. | https://github.com/Azure/AzurePublicDataset |
+| Green DC Dataset (UCI) | Energy and thermal telemetry from a green data center testbed suitable for anomaly studies. | https://archive.ics.uci.edu |
+
+Normalize any of these traces with `datasets/prepare_dataset.py` (after `pip install -r datasets/requirements.txt`) to generate canonical telemetry CSVs and optionally replay them over MQTT into the running stack. See `datasets/README.md` for examples.
+
+- Quick start: a toy Google Cluster CSV lives under `datasets/samples/google_sample.csv`. Run `python datasets/prepare_dataset.py --dataset google_cluster_v2 --input datasets/samples/google_sample.csv --publish-mqtt` to emit normalized telemetry and pipe it into the live MQTT spine for testing.
+- Prefer automation? `scripts/replay_green_dc.py --publish --mqtt-host mqtt.vicezion.com --mqtt-topic sensors/public/green_dc` downloads the UCI archive, normalizes it, and streams telemetry into the stack in one command.
+- Real dataset workflow (Green DC example):
+  1. Download and extract the UCI archive:
+     ```powershell
+     Invoke-WebRequest -Uri https://archive.ics.uci.edu/ml/machine-learning-databases/00357/occupancy_data.zip -OutFile datasets/raw/occupancy_data.zip
+     Expand-Archive -LiteralPath datasets/raw/occupancy_data.zip -DestinationPath datasets/raw/occupancy_data -Force
+     ```
+  2. Normalize the CSV so it matches the stack schema:
+     ```bash
+     python datasets/prepare_dataset.py \
+       --dataset green_dc_uci \
+       --input datasets/raw/occupancy_data/datatraining.txt \
+       --output datasets/processed/green_dc_training.csv
+     ```
+  3. Retrain the Isolation Forest from that dataset and store the artifact:
+     ```bash
+     python ai_service/train_from_dataset.py \
+       --input datasets/processed/green_dc_training.csv \
+       --output ai_service/models/isolation_forest_green.joblib
+     ```
+  4. Point the AI service at the artifact by setting `MODEL_ARTIFACT_PATH=/app/models/isolation_forest_green.joblib` (already wired in `docker-compose.yml`) so every container loads the pre-trained model instead of bootstrapping a synthetic one.
+- Full end-to-end runbooks (automation, security, testing) live in `docs/OPERATIONS.md`.
+
 ## AI Microservice (VAE + Explainability)
 
 The `ai_service` container bootstraps a synthetic dataset, trains a **Variational Auto-Encoder (VAE)** by default (fallback IsolationForest is still available), and exposes `/predict` with:
@@ -59,6 +96,8 @@ The `ai_service` container bootstraps a synthetic dataset, trains a **Variationa
 - SHAP contribution values per feature
 - LIME explanation list for rapid operator review
 - Optional MLflow logging of every inference (disable by omitting `MLFLOW_TRACKING_URI`)
+
+Prefer training on real telemetry? Use `python ai_service/train_from_dataset.py --input datasets/processed/<file>.csv --output ai_service/models/<artifact>.joblib` and set `MODEL_ARTIFACT_PATH` (already mounted in the compose file) so the service loads your Isolation Forest weights instead of retraining at startup. You can also trigger `.github/workflows/train-model-artifact.yml` to run the same flow in GitHub Actions and download the resulting artifact for deployment.
 
 ### Example Request
 
@@ -95,7 +134,13 @@ Use this endpoint to feed Grafana (via the JSON API plugin) or a dedicated React
 2. Telegraf subscribes via `inputs.mqtt_consumer`, tags each message with `rack_id`, and writes the event into the `rack_telemetry` measurement alongside classic host stats.
 3. Grafana renders CPU/memory/fan telemetry plus the AI anomaly score trend per rack.
 
-Swap the simulator with a real Wazuh/Zeek/MQTT publisher by pointing those agents at the Mosquitto broker—Telegraf does not need to change.
+Swap the simulator with a real Wazuh/Zeek/MQTT publisher by pointing those agents at the Mosquitto broker-Telegraf does not need to change.
+
+### Securing the MQTT Spine
+
+- `mosquitto/mosquitto.conf` requires authentication. Generate a password hash with `python scripts/generate_mqtt_password.py --password <secret>` (writes `mosquitto/passwordfile`).
+- Export `MQTT_PASSWORD=<secret>` (and optionally override `MQTT_USERNAME`) before running `docker compose up` so Telegraf + telemetry_feeder authenticate automatically.
+- Share the same credentials with external devices or create additional entries in `mosquitto/passwordfile` as needed.
 
 ## Human-Centric Dashboard + ChatOps
 
@@ -125,3 +170,11 @@ docker compose down -v
 ```
 
 This removes containers and named volumes (InfluxDB, Grafana, MLflow). Re-run `docker compose up` to recreate the full research environment.
+
+## Testing & Observability
+
+- **Replay:** `python scripts/replay_green_dc.py --publish --mqtt-host mqtt.vicezion.com --mqtt-topic sensors/public/green_dc`.
+- **APIs:** `curl https://ai.vicezion.com/health` and `curl -X POST https://chatops.vicezion.com/question -H "Content-Type: application/json" -d '{"question":"Why did rack 12A alert?"}'`.
+- **Dashboard:** open Grafana → _Human-Centric Data Center Overview_ to confirm anomaly scores + ChatOps panels update in near real time.
+- **Prometheus:** scrape `http://localhost:9091` (or your reverse proxy) for `/metrics` emitted by the AI and ChatOps services; wire Grafana/alerts as needed.
+- For detailed checklists, see `docs/OPERATIONS.md`.

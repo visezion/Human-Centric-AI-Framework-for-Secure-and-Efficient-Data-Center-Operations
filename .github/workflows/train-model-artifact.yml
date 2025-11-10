@@ -1,0 +1,51 @@
+name: Train Isolation Forest Artifact
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "datasets/**"
+      - "ai_service/train_from_dataset.py"
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install training dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ai_service/requirements-train.txt
+
+      - name: Download Green DC dataset
+        run: |
+          mkdir -p datasets/raw
+          curl -L https://archive.ics.uci.edu/ml/machine-learning-databases/00357/occupancy_data.zip -o datasets/raw/occupancy_data.zip
+          unzip -o datasets/raw/occupancy_data.zip -d datasets/raw/occupancy_data
+
+      - name: Normalize dataset
+        run: |
+          python datasets/prepare_dataset.py \
+            --dataset green_dc_uci \
+            --input datasets/raw/occupancy_data/datatraining.txt \
+            --output datasets/processed/green_dc_training_ci.csv \
+            --limit 5000
+
+      - name: Train Isolation Forest artifact
+        run: |
+          python ai_service/train_from_dataset.py \
+            --input datasets/processed/green_dc_training_ci.csv \
+            --output ai_service/models/isolation_forest_green_ci.joblib
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolation-forest-green
+          path: ai_service/models/isolation_forest_green_ci.joblib
