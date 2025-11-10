@@ -139,9 +139,10 @@ Swap the simulator with a real Wazuh/Zeek/MQTT publisher by pointing those agent
 
 ### Securing the MQTT Spine
 
-- `mosquitto/mosquitto.conf` requires authentication. Generate a password hash with `python scripts/generate_mqtt_password.py --password <secret>` (writes `mosquitto/passwordfile`), or use the Operations Console UI to create credentials.
-- If you re-enable authentication, share the same credentials with external devices or create additional entries in `mosquitto/passwordfile` as needed.
-- Use the Operations Console (`http://<host>:8600`) to flip between Simulator/Live modes; it automatically restarts Mosquitto after writing the password file and can start/stop/restart monitored containers.
+- By default (`MQTT_AUTH_ENABLED=false`), Mosquitto runs with `allow_anonymous true`. Telegraf, telemetry_feeder, and devices connect without credentials.
+- To enforce authentication, set `MQTT_AUTH_ENABLED=true` (see `docs/OPERATIONS.md`), generate credentials with `python scripts/generate_mqtt_password.py --username <user> --password <secret>` or via the Operations Console UI, and restart Mosquitto. The stack will automatically pass those credentials to Telegraf and telemetry_feeder.
+- Share the generated credentials with any external device when auth is enabled.
+- The Operations Console (`http://<host>:8600`) lets you toggle Simulator/Live modes, mint credentials, and start/stop/restart monitored containers in either mode.
 
 ## Human-Centric Dashboard + ChatOps
 
