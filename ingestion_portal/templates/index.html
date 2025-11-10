@@ -2,49 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ingestion Portal</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Human-Centric Ops Console</title>
+    <link rel="stylesheet" href="/static/portal.css">
 </head>
 <body>
-<main class="container">
-    <header>
-        <h1>Human-Centric Operations Console</h1>
-        <p>Switch telemetry modes, onboard edge devices, and jump into every service that powers the framework.</p>
-        <p>
-            <a class="secondary" href="{{ framework_doc }}" target="_blank">Framework Overview</a>
-            <a class="secondary" href="{{ operations_doc }}" target="_blank">Operations Guide</a>
-        </p>
-    </header>
+<header>
+    <h1>Human-Centric Ops Console</h1>
+    <p>Command center for ingestion, AI, observability, and deployments.</p>
+    <p>
+        <a class="btn" href="{{ framework_doc }}" target="_blank">Framework Overview</a>
+        <a class="btn" href="{{ operations_doc }}" target="_blank" style="background:#10b981;">Operations Guide</a>
+    </p>
+</header>
+<main>
+    {% if notice %}
+    <div class="notice">{{ notice }}</div>
+    {% endif %}
 
     <section>
-        <h2>Ingestion Mode</h2>
+        <h2>Ingestion Control</h2>
         <form method="post" action="/mode">
-            <label>Mode Selector
+            <label>
+                <span>Mode Selector</span>
                 <select name="mode">
-                    <option value="simulator" {% if mode == 'simulator' %}selected{% endif %}>Simulator</option>
-                    <option value="live" {% if mode == 'live' %}selected{% endif %}>Live Devices</option>
+                    <option value="simulator" {% if mode == 'simulator' %}selected{% endif %}>Simulator (synthetic)</option>
+                    <option value="live" {% if mode == 'live' %}selected{% endif %}>Live devices</option>
                 </select>
             </label>
-            <button type="submit">Apply</button>
+            <button type="submit">Apply Mode</button>
         </form>
-        <article>
-            <strong>Status:</strong>
-            {{ 'Simulator mode—telemetry_feeder publishing synthetic racks.' if mode == 'simulator' else 'Live mode—feeder paused so hardware devices own ingestion.' }}
-        </article>
+        <form method="post" action="/action" style="margin-top:1rem;">
+            <input type="hidden" name="container" value="{{ feeder_container }}">
+            <button type="submit" name="action" value="restart" class="btn" style="background:#f97316;">Restart Simulator</button>
+        </form>
+        <p>Current mode: <strong>{{ 'Simulator — telemetry feeder publishing synthetic racks.' if mode == 'simulator' else 'Live — feeder paused so field devices own ingestion.' }}</strong></p>
     </section>
 
     <section>
-        <h2>Device Onboarding</h2>
-        <p>Devices publish to <code>{{ mqtt_host }}</code>:<code>{{ mqtt_port }}</code>. Generate per-device credentials below.</p>
+        <h2>Onboard MQTT Device</h2>
+        <p>Point devices to <code>{{ mqtt_host }}</code>:<code>{{ mqtt_port }}</code>. Generate credentials and the broker will reload automatically.</p>
         <form method="post" action="/device">
-            <label>Username
+            <label>
+                <span>Username</span>
                 <input name="username" value="{{ default_username }}" required>
             </label>
-            <label>Password
-                <input name="password" type="text" placeholder="new secret" required>
+            <label>
+                <span>Password</span>
+                <input name="password" placeholder="choose a strong secret" required>
             </label>
-            <button type="submit">Generate Credential & Reload Broker</button>
+            <button type="submit">Generate Credential</button>
         </form>
+    </section>
+
+    <section>
+        <h2>Stack Health</h2>
+        <div class="grid">
+            {% for container in containers %}
+            <article class="stack-card">
+                <div class="name">
+                    <h3>{{ container.display }}</h3>
+                    <small>{{ container.image }}</small>
+                </div>
+                <div class="status">
+                    <span class="badge {{ container.status_class }}">{{ container.status }}</span>
+                    <span>{{ container.uptime }}</span>
+                    <form method="post" action="/action">
+                        <input type="hidden" name="container" value="{{ container.name }}">
+                        <div class="actions">
+                            <button type="submit" name="action" value="restart">Restart</button>
+                            {% if container.status == 'running' %}
+                            <button type="submit" name="action" value="stop" style="background:#f43f5e;">Stop</button>
+                            {% else %}
+                            <button type="submit" name="action" value="start" style="background:#10b981;">Start</button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
     </section>
 
     <section>
@@ -55,11 +91,11 @@
                 <header>
                     <h3>{{ svc.name }}</h3>
                     {% if svc.status %}
-                        <small>Status: <strong>{{ svc.status }}</strong></small>
+                        <span class="badge {{ 'online' if svc.status == 'online' else 'offline' }}">{{ svc.status }}</span>
                     {% endif %}
                 </header>
                 <p>{{ svc.role }}</p>
-                <a href="{{ svc.url }}" target="_blank">{{ svc.cta or 'Open' }}</a>
+                <a class="btn" href="{{ svc.url }}" target="_blank">{{ svc.cta or 'Open' }}</a>
             </article>
             {% endfor %}
         </div>

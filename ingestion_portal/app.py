@@ -1,8 +1,10 @@
 import base64
 import os
 import secrets
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
+from urllib.parse import quote
 
 import hashlib
 import httpx
@@ -18,6 +20,15 @@ MOSQUITTO_PWD_FILE = Path("/mosquitto/passwordfile")
 DEFAULT_USERNAME = os.getenv("MQTT_USERNAME", "hcai_operator")
 FEEDER_CONTAINER = os.getenv("FEEDER_CONTAINER_NAME", "telemetry-feeder")
 MOSQUITTO_CONTAINER = os.getenv("MOSQUITTO_CONTAINER_NAME", "mosquitto")
+OBSERVED_CONTAINERS = [name.strip() for name in os.getenv("OBSERVED_CONTAINERS", "mosquitto,telemetry-feeder,ai-service,chatops,grafana,prometheus").split(",") if name.strip()]
+CONTAINER_LABELS = {
+    "mosquitto": "Mosquitto MQTT",
+    "telemetry-feeder": "Simulator Feeder",
+    "ai-service": "AI Service",
+    "chatops": "ChatOps",
+    "grafana": "Grafana",
+    "prometheus": "Prometheus",
+}
 docker_client = docker.DockerClient(base_url=os.getenv("DOCKER_BASE_URL", "unix://var/run/docker.sock"))
 
 app = FastAPI(title="Ingestion Portal")
@@ -121,6 +132,46 @@ def _generate_password(username: str, password: str) -> None:
     MOSQUITTO_PWD_FILE.write_text("\n".join(entries) + "\n")
 
 
+def _format_uptime(started_at: str) -> str:
+    try:
+        started = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+        delta = datetime.now(timezone.utc) - started
+        hours = int(delta.total_seconds() // 3600)
+        minutes = int((delta.total_seconds() % 3600) // 60)
+        if hours > 48:
+            return f"{hours // 24}d {hours % 24}h"
+        if hours:
+            return f"{hours}h {minutes}m"
+        return f"{minutes}m"
+    except Exception:
+        return "n/a"
+
+
+def _container_summary(name: str) -> Dict[str, str]:
+    try:
+        container = docker_client.containers.get(name)
+        container.reload()
+        state = container.status
+        started = container.attrs.get("State", {}).get("StartedAt", "")
+        return {
+            "name": name,
+            "display": CONTAINER_LABELS.get(name, name),
+            "status": state,
+            "status_class": "online" if state == "running" else "offline",
+            "image": container.image.tags[0] if container.image.tags else container.image.short_id,
+            "uptime": _format_uptime(started) if started else "n/a",
+        }
+    except docker.errors.NotFound:
+        return {
+            "name": name,
+            "display": CONTAINER_LABELS.get(name, name),
+            "status": "missing",
+            "status_class": "offline",
+            "image": "not found",
+            "uptime": "n/a",
+        }
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     state = _read_state()
@@ -135,6 +186,8 @@ async def index(request: Request):
                 except Exception:
                     status = "offline"
             services.append({**svc, "status": status})
+    containers = [_container_summary(name) for name in OBSERVED_CONTAINERS]
+    notice = request.query_params.get("notice")
     template = templates.get_template("index.html")
     return HTMLResponse(
         template.render(
@@ -143,8 +196,11 @@ async def index(request: Request):
             mqtt_port=os.getenv("MQTT_PORT", "1883"),
             default_username=DEFAULT_USERNAME,
             services=services,
+            containers=containers,
+            feeder_container=FEEDER_CONTAINER,
             framework_doc=os.getenv("FRAMEWORK_DOC_URL", "https://github.com/visezion/.../docs/FRAMEWORK_OVERVIEW.md"),
             operations_doc=os.getenv("OPERATIONS_DOC_URL", "https://github.com/visezion/.../docs/OPERATIONS.md"),
+            notice=notice,
         )
     )
 
@@ -156,7 +212,8 @@ async def toggle_mode(mode: str = Form(...)):
         _manage_container(FEEDER_CONTAINER, "start")
     else:
         _manage_container(FEEDER_CONTAINER, "stop")
-    return RedirectResponse("/", status_code=303)
+    message = "Switched to simulator mode." if mode == "simulator" else "Switched to live devices."
+    return RedirectResponse(f"/?notice={quote(message)}", status_code=303)
 
 
 @app.post("/device")
@@ -164,6 +221,15 @@ async def register_device(username: str = Form(...), password: str = Form(...)):
     try:
         _generate_password(username, password)
         _manage_container(MOSQUITTO_CONTAINER, "restart")
-        return RedirectResponse("/", status_code=303)
+        return RedirectResponse(f"/?notice={quote('Credential generated & broker reloaded.')}", status_code=303)
+    except docker.errors.DockerException as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
+
+@app.post("/action")
+async def container_action(container: str = Form(...), action: str = Form(...)):
+    try:
+        _manage_container(container, action)
+        return RedirectResponse(f"/?notice={quote(f'{container} {action} issued.')}", status_code=303)
     except docker.errors.DockerException as exc:
         return JSONResponse({"error": str(exc)}, status_code=500)

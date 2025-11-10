@@ -46,9 +46,9 @@ The minimal `docker-compose.yml` brings up Telegraf, InfluxDB, Grafana, the AI m
    - InfluxDB UI: https://influx.vicezion.com (user `human_admin`, password `changeme123`)
    - Grafana: https://grafana.vicezion.com (user `admin`, password `admin123`)
    - AI API: https://ai.vicezion.com/health and `/predict`
-   - mlflow UI: https://mlflow.vicezion.com
+   - MLflow UI: https://mlflow.vicezion.com
    - ChatOps API / JSON datasource: https://chatops.vicezion.com
-- Ingestion Portal: https://portal.vicezion.com (or "http://<host>:8600") to switch simulator/live mode and onboard devices.
+   - Operations Console: https://portal.vicezion.com (or `http://<host>:8600`) to toggle simulator/live mode, generate MQTT credentials, inspect container health, and deep-link into every subsystem.
 
 Telegraf immediately streams host metrics into InfluxDB, which in turn populate the provided Grafana dashboard (`Human-Centric AI`).
 
@@ -139,10 +139,10 @@ Swap the simulator with a real Wazuh/Zeek/MQTT publisher by pointing those agent
 
 ### Securing the MQTT Spine
 
-- `mosquitto/mosquitto.conf` requires authentication. Generate a password hash with `python scripts/generate_mqtt_password.py --password <secret>` (writes `mosquitto/passwordfile`), or use the Ingestion Portal UI to create credentials.
+- `mosquitto/mosquitto.conf` requires authentication. Generate a password hash with `python scripts/generate_mqtt_password.py --password <secret>` (writes `mosquitto/passwordfile`), or use the Operations Console UI to create credentials.
 - Export `MQTT_PASSWORD=<secret>` (and optionally override `MQTT_USERNAME`) before running `docker compose up` so Telegraf + telemetry_feeder authenticate automatically.
 - Share the same credentials with external devices or create additional entries in `mosquitto/passwordfile` as needed.
-- Use the Ingestion Portal (http://<host>:8600) to flip between Simulator/Live modes; it automatically restarts Mosquitto after writing the password file.
+- Use the Operations Console (`http://<host>:8600`) to flip between Simulator/Live modes; it automatically restarts Mosquitto after writing the password file and can start/stop/restart monitored containers.
 
 ## Human-Centric Dashboard + ChatOps
 
