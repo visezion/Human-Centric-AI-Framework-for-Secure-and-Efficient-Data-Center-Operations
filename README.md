@@ -140,7 +140,7 @@ Swap the simulator with a real Wazuh/Zeek/MQTT publisher by pointing those agent
 ### Securing the MQTT Spine
 
 - `mosquitto/mosquitto.conf` requires authentication. Generate a password hash with `python scripts/generate_mqtt_password.py --password <secret>` (writes `mosquitto/passwordfile`), or use the Operations Console UI to create credentials.
-- Share the same credentials with external devices or create additional entries in `mosquitto/passwordfile` as needed.
+- If you re-enable authentication, share the same credentials with external devices or create additional entries in `mosquitto/passwordfile` as needed.
 - Use the Operations Console (`http://<host>:8600`) to flip between Simulator/Live modes; it automatically restarts Mosquitto after writing the password file and can start/stop/restart monitored containers.
 
 ## Human-Centric Dashboard + ChatOps
