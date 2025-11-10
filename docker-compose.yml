@@ -148,6 +148,34 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
+  ingestion_portal:
+    build: ./ingestion_portal
+    container_name: ingestion-portal
+    restart: unless-stopped
+    ports:
+      - "8600:8600"
+    environment:
+      MQTT_HOST: mqtt.vicezion.com
+      MQTT_PORT: "1883"
+      MQTT_USERNAME: hcai_operator
+      GRAFANA_URL: https://grafana.vicezion.com
+      INFLUX_URL_PUBLIC: https://influx.vicezion.com
+      AI_SERVICE_URL_PUBLIC: https://ai.vicezion.com/docs
+      CHATOPS_URL_PUBLIC: https://chatops.vicezion.com/docs
+      MLFLOW_URL: https://mlflow.vicezion.com
+      PROMETHEUS_URL: http://localhost:9091
+      DOCS_URL: https://github.com/visezion/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/tree/main/docs
+      FRAMEWORK_DOC_URL: https://github.com/visezion/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/blob/main/docs/FRAMEWORK_OVERVIEW.md
+      OPERATIONS_DOC_URL: https://github.com/visezion/Human-Centric-AI-Framework-for-Secure-and-Efficient-Data-Center-Operations/blob/main/docs/OPERATIONS.md
+      PORTAINER_URL: https://docker.vicezion.com
+      FEEDER_CONTAINER_NAME: telemetry-feeder
+      MOSQUITTO_CONTAINER_NAME: mosquitto
+    volumes:
+      - ./mosquitto/passwordfile:/mosquitto/passwordfile
+      - ./ingestion_portal/ingestion_state.json:/app/ingestion_state.json
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - mosquitto
 
 volumes:
   influxdb-data:

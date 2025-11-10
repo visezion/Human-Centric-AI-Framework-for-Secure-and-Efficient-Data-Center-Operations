@@ -122,4 +122,11 @@ Hook it into your release process by downloading the artifact and dropping it in
    - `python ai_service/train_from_dataset.py --input datasets/processed/green_dc_training.csv --output /tmp/test.joblib` (ensures training script works on your machine).
    - `python scripts/generate_mqtt_password.py --password <pwd>` followed by `docker compose up -d mosquitto telegraf telemetry_feeder` (ensures secured ingestion path works).
 
+## 6. Ingestion Portal (Simulator vs. Live)
+
+- Browse to `http://localhost:8600` (or the proxied `https://portal…` host). The UI shows the current mode, MQTT host/port, and a device credential form.
+- **Mode toggle:** flipping to “Live” stops the `telemetry_feeder` container; switching back to “Simulator” restarts it so synthetic racks resume publishing.
+- **Device credentials:** enter a username/password to append to `mosquitto/passwordfile`. The portal restarts Mosquitto automatically so the new credential takes effect.
+- Share the generated host/port + credentials with your IoT sensors to connect them directly to the stack without touching configs.
+
 With these steps, you can iteratively incorporate new telemetry sources, keep the AI models fresh, and prove the end-to-end flow is healthy before promoting changes.

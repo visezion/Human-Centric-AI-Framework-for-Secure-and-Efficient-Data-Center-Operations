@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ingestion Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+</head>
+<body>
+<main class="container">
+    <header>
+        <h1>Human-Centric Operations Console</h1>
+        <p>Switch telemetry modes, onboard edge devices, and jump into every service that powers the framework.</p>
+        <p>
+            <a class="secondary" href="{{ framework_doc }}" target="_blank">Framework Overview</a>
+            <a class="secondary" href="{{ operations_doc }}" target="_blank">Operations Guide</a>
+        </p>
+    </header>
+
+    <section>
+        <h2>Ingestion Mode</h2>
+        <form method="post" action="/mode">
+            <label>Mode Selector
+                <select name="mode">
+                    <option value="simulator" {% if mode == 'simulator' %}selected{% endif %}>Simulator</option>
+                    <option value="live" {% if mode == 'live' %}selected{% endif %}>Live Devices</option>
+                </select>
+            </label>
+            <button type="submit">Apply</button>
+        </form>
+        <article>
+            <strong>Status:</strong>
+            {{ 'Simulator mode—telemetry_feeder publishing synthetic racks.' if mode == 'simulator' else 'Live mode—feeder paused so hardware devices own ingestion.' }}
+        </article>
+    </section>
+
+    <section>
+        <h2>Device Onboarding</h2>
+        <p>Devices publish to <code>{{ mqtt_host }}</code>:<code>{{ mqtt_port }}</code>. Generate per-device credentials below.</p>
+        <form method="post" action="/device">
+            <label>Username
+                <input name="username" value="{{ default_username }}" required>
+            </label>
+            <label>Password
+                <input name="password" type="text" placeholder="new secret" required>
+            </label>
+            <button type="submit">Generate Credential & Reload Broker</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Service Directory</h2>
+        <div class="grid">
+            {% for svc in services %}
+            <article>
+                <header>
+                    <h3>{{ svc.name }}</h3>
+                    {% if svc.status %}
+                        <small>Status: <strong>{{ svc.status }}</strong></small>
+                    {% endif %}
+                </header>
+                <p>{{ svc.role }}</p>
+                <a href="{{ svc.url }}" target="_blank">{{ svc.cta or 'Open' }}</a>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+</body>
+</html>
