@@ -37,8 +37,6 @@ services:
       - mosquitto
     environment:
       INFLUX_TOKEN: supersecret-supertoken
-      MQTT_USERNAME: hcai_operator
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD env var}
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     links:
@@ -92,8 +90,6 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
     environment:
       MQTT_BROKER_HOST: mqtt.vicezion.com
-      MQTT_USERNAME: hcai_operator
-      MQTT_PASSWORD: ${MQTT_PASSWORD:?Set MQTT_PASSWORD env var}
       MQTT_TOPIC_PREFIX: sensors
       AI_SERVICE_URL: https://ai.vicezion.com/predict
       PUBLISH_INTERVAL_SECONDS: "5"
@@ -157,7 +153,6 @@ services:
     environment:
       MQTT_HOST: mqtt.vicezion.com
       MQTT_PORT: "1883"
-      MQTT_USERNAME: hcai_operator
       GRAFANA_URL: https://grafana.vicezion.com
       INFLUX_URL_PUBLIC: https://influx.vicezion.com
       AI_SERVICE_URL_PUBLIC: https://ai.vicezion.com/docs

@@ -91,13 +91,7 @@ Hook it into your release process by downloading the artifact and dropping it in
    password_file /mosquitto/config/passwordfile
    ```
 
-3. Pass credentials to Telegraf & telemetry_feeder via environment:
-   ```bash
-   export MQTT_PASSWORD="super-secret"
-   docker compose up -d telegraf telemetry_feeder
-   ```
-
-4. Update IoT publishers to use the same username/password combo.
+3. By default `allow_anonymous true` permits unauthenticated clients, so Telegraf/telemetry_feeder (and your IoT devices) connect without exporting any secrets. If you re-enable auth, set `export MQTT_PASSWORD="super-secret"` (and `MQTT_USERNAME`) before `docker compose up` and share those credentials with your devices.
 
 ## 5. Observability & Testing
 

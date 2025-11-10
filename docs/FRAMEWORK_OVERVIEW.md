@@ -53,6 +53,6 @@
 2. Update DNS + TLS for `*.yourdomain.com`, edit `docker-compose.yml` env vars.
 3. Generate MQTT secrets (`scripts/generate_mqtt_password.py`) or use the portal.
 4. Train/attach your AI model artifact or rely on the included VAE.
-5. `export MQTT_PASSWORD=... && docker compose up -d`.
+5. Run `docker compose up -d` (no MQTT secrets required unless you re-enable authentication).
 6. Replay data for testing (`scripts/replay_green_dc.py --publish ...`), confirm Grafana/ChatOps/Prometheus.
 7. Point real agents at the broker; manage ingestion + credentials via the portal going forward.
